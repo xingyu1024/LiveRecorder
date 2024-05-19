@@ -43,6 +43,8 @@ class LiveRecoder:
         self.get_cookies()
         self.client = self.get_client()
 
+        self.sessionId = user.get('sessionId')
+
     async def start(self):
         logger.info(f'{self.flag}正在检测直播状态')
         while True:
@@ -276,11 +278,13 @@ class Douyin(LiveRecoder):
                 data = data[0]
                 if data['status'] == 2:
                     title = data['title']
-                    stream = HTTPStream(
-                        self.get_streamlink(),
-                        data['stream_url']['flv_pull_url']['FULL_HD1']
-                    )  # HTTPStream[flv]
-                    await asyncio.to_thread(self.run_record, stream, url, title, 'flv')
+                    play_url =  data['stream_url']['hls_pull_url_map']['FULL_HD1']
+                    # stream = HLSStream.parse_variant_playlist(
+                    #     self.get_streamlink(),
+                    #     data['stream_url']['hls_pull_url_map']['FULL_HD1']
+                    # )  # HTTPStream[flv]
+                    stream = self.get_streamlink().streams(play_url).get('best')  # HLSStream[ts]
+                    await asyncio.to_thread(self.run_record, stream, url, title, 'ts')
 
 
 class Youtube(LiveRecoder):
@@ -434,6 +438,33 @@ class Bigolive(LiveRecoder):
                     url=response['data']['hls_src']
                 )  # HLSStream[mpegts]
                 await asyncio.to_thread(self.run_record, stream, url, title, 'ts')
+
+
+class Yinjiu(LiveRecoder):
+    async def run(self):
+        url = f'https://m.mmshijitech.net/appgw/v2/uservideolist?name={self.id}&start=0&sessionid={self.sessionId}'
+        if url not in recording:
+            response = (await self.request(
+                method='GET',
+                url=url
+            )).json()
+            if response['retinfo']['videos'][0]['living_status'] == 1:
+                vid = response['retinfo']['videos'][0]['vid']
+                response = (await self.request(
+                    method='GET',
+                    url='https://m.mmshijitech.net/appgw/v2/watchstart?',
+                    headers={
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36 Edg/118.0.2088.69'
+                    },
+                    params={
+                        'vid': vid,
+                        'sessionid': self.sessionId
+                    }
+                )).json()
+                if data := response['retinfo']:
+                    title = data['title']
+                    stream = self.get_streamlink().streams(data['play_url']).get('best')
+                    await asyncio.to_thread(self.run_record, stream, url, title, 'm3u8')
 
 
 class Pixivsketch(LiveRecoder):

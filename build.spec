@@ -30,7 +30,7 @@ exe = EXE(
     a.datas,
     [],
     name='LiveRecorder',
-    icon='',
+    icon=['icon.ico'],
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
