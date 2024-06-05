@@ -278,7 +278,9 @@ class Douyin(LiveRecoder):
                 data = data[0]
                 if data['status'] == 2:
                     title = data['title']
-                    play_url =  data['stream_url']['hls_pull_url_map']['FULL_HD1']
+                    nickname = data['owner']['nickname']
+                    title = nickname + '-' + title
+                    play_url = data['stream_url']['hls_pull_url_map']['FULL_HD1']
                     # stream = HLSStream.parse_variant_playlist(
                     #     self.get_streamlink(),
                     #     data['stream_url']['hls_pull_url_map']['FULL_HD1']
