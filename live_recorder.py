@@ -278,14 +278,18 @@ class Douyin(LiveRecoder):
                 data = data[0]
                 if data['status'] == 2:
                     title = data['title']
-                    nickname = data['owner']['nickname']
-                    title = nickname + '-' + title
-                    play_url = data['stream_url']['hls_pull_url_map']['FULL_HD1']
-                    # stream = HLSStream.parse_variant_playlist(
+                    stream_data = json.loads(data['stream_url']['live_core_sdk_data']['pull_data']['stream_data'])
+                    live_url = data['stream_url']['hls_pull_url_map']['FULL_HD1']
+                    for quality_code in ('origin', 'uhd', 'hd', 'sd', 'md', 'ld'):
+                        if quality_data := stream_data['data'].get(quality_code):
+                            live_url = quality_data['main']['hls']
+                            break
+                    # stream = HTTPStream(
                     #     self.get_streamlink(),
-                    #     data['stream_url']['hls_pull_url_map']['FULL_HD1']
+                    #     live_url
                     # )  # HTTPStream[flv]
-                    stream = self.get_streamlink().streams(play_url).get('best')  # HLSStream[ts]
+                    # await asyncio.to_thread(self.run_record, stream, url, title, 'flv')
+                    stream = self.get_streamlink().streams(live_url).get('best')  # HLSStream[ts]
                     await asyncio.to_thread(self.run_record, stream, url, title, 'ts')
 
 
@@ -488,6 +492,30 @@ class Pixivsketch(LiveRecoder):
                     url=live['owner']['hls_movie']
                 )
                 stream = list(streams.values())[0]  # HLSStream[mpegts]
+                await asyncio.to_thread(self.run_record, stream, url, title, 'ts')
+
+
+class Chaturbate(LiveRecoder):
+    async def run(self):
+        url = f'https://chaturbate.com/{self.id}'
+        if url not in recording:
+            response = (await self.request(
+                method='POST',
+                url='https://chaturbate.com/get_edge_hls_url_ajax/',
+                headers={
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                data={
+                    'room_slug': self.id
+                }
+            )).json()
+            if response['room_status'] == 'public':
+                title = self.id
+                streams = HLSStream.parse_variant_playlist(
+                    session=self.get_streamlink(),
+                    url=response['url']
+                )
+                stream = list(streams.values())[2]
                 await asyncio.to_thread(self.run_record, stream, url, title, 'ts')
 
 
