@@ -444,7 +444,7 @@ class Bigolive(LiveRecoder):
 
 class Yinjiu(LiveRecoder):
     async def run(self):
-        url = f'https://m.mmshijitech.net/appgw/v2/uservideolist?name={self.id}&start=0&sessionid={self.sessionId}'
+        url = f'https://m.jj13.cn/appgw/v2/uservideolist?name={self.id}&start=0&sessionid={self.sessionId}'
         if url not in recording:
             response = (await self.request(
                 method='GET',
@@ -454,8 +454,9 @@ class Yinjiu(LiveRecoder):
                 vid = response['retinfo']['videos'][0]['vid']
                 response = (await self.request(
                     method='GET',
-                    url='https://m.mmshijitech.net/appgw/v2/watchstart?',
+                    url='https://m.jj13.cn/appgw/v2/watchstart?',
                     headers={
+                        'Custom-Agent': 'leban v6.11.0 rv:20230803 Online (h5) Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0',
                         'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Mobile Safari/537.36 Edg/118.0.2088.69'
                     },
                     params={
