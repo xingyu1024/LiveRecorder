@@ -1,0 +1,7 @@
+.idea/
+build/
+config.json
+dist/
+logs/
+output/
+LiveRecorder.egg-info/
