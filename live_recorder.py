@@ -351,7 +351,7 @@ class Yinjiu(LiveRecoder):
                 if data := response['retinfo']:
                     title = data['title']
                     stream = self.get_streamlink().streams(data['play_url']).get('best')
-                    await asyncio.to_thread(self.run_record, stream, url, title, 'ts')
+                    await asyncio.to_thread(self.run_record, stream, url, title, 'flv')
 
 class Youtube(LiveRecoder):
     async def run(self):
